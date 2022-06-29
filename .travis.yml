@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t yoanaes/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run yoanaes/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t yoanaes/multi-client ./client
+  - docker build -t yoanaes/multi-nginx ./nginx
+  - docker build -t yoanaes/multi-server ./server
+  - docker build -t yoanaes/multi-worker ./worker
+  # Log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker Hub
+  - docker push yoanaes/multi-client
+  - docker push yoanaes/multi-nginx
+  - docker push yoanaes/multi-server
+  - docker push yoanaes/multi-worker
